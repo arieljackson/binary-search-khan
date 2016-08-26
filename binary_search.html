@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+</head>
+
+<div id='container'>
+    <div id='buttons'></div>
+    <svg id="line"></svg>
+</div>
+
+<style>
+
+    #container{
+        width: 1100px;
+    }
+    #buttons {
+        height: 100px;
+        margin-left: 90px;
+    }
+    #line {
+        height: 650px;
+        width: 79%;
+        margin-left:auto;
+        margin-right:auto;
+    }
+    
+    .response-button {
+        background-color: #4CAF50;
+        width: 80px;
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        font-size: 9px;
+        margin: 4px 2px;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    var util = {
+        'listToSet': function(list) {
+            var obj = {};
+            var len = list.length;
+            for (let i = 0; i < len; i++) {
+                obj[list[i]] = true;
+            }
+            return obj;
+        }
+
+    }
+</script>
+<script>
+    // CONSTANTS
+
+    var H = window.innerHeight;
+    var W = window.innerWidth;
+
+    var INIT_SIZE_OF_ARRAY = 100;
+
+    var X_MID = (function() {
+        let factor = 2;
+        return W / factor;
+    }());
+
+    var X_DELTA = (function() {
+        let factor = 2.3;
+        return W / factor;
+    }());
+
+    var X_MIN = (function() {
+        return X_MID - X_DELTA;
+    }());
+
+    var X_MAX = (function() {
+        return X_MID + X_DELTA;
+    }());
+
+    var Y_DELTA = (function() {
+        let factor = 5;
+        return factor;
+    }());
+
+    var Y_MID = (function() {
+        let factor = 10;
+        return H / factor;
+    }());
+
+    var Y_MAX = (function() {
+        return Y_MID + Y_DELTA;
+    }());
+
+    var Y_MIN = (function() {
+        return Y_MID - Y_DELTA;
+    }());
+
+    var TOTAL_X_LEN = (function() {
+        var factor = 3.5;
+        return W * factor;
+    }());
+
+    var MOVE_BY_Y = (function() {
+        var delta = 50;
+        return delta;
+    }());
+
+    var Y_FACTOR = (function() {
+        let factor = 10;
+        return factor;
+    }());
+
+    var PRIME_NUMBERS_SET = (function() {
+
+        return util.listToSet([2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97])
+    })();
+    console.log(PRIME_NUMBERS_SET)
+</script>
+
+<script>
+    var comp = {
+
+        'even': function(number, even_or_odd) {
+            return number % 2 === 0;
+        },
+        'prime': function(number) {
+            return number in PRIME_NUMBERS_SET;
+        },
+        'less': function(x, y) {
+            return x < y;
+        },
+        'is': function(x, y) {
+            return x === y;
+        }
+    };
+</script>
+<script>
+    var modify = {
+        'greaterThanN': function(listOfVal, n) {
+            return listOfVal.filter(function(x) {
+                return x > n;
+            });
+        },
+        'lessThanN': function(listOfVal, n) {
+            return listOfVal.filter(function(x) {
+                return x < n;
+            });
+        },
+        'isN': function(listOfVal, n) {
+            return listOfVal.filter(function(x) {
+                return x === n;
+            });
+        },
+        'isPrime': function(listOfVal) {
+            return listOfVal.filter(comp.prime);
+        },
+        'isEven': function(listOfVal) {
+            return listOfVal.filter(comp.even);
+        },
+        'isOdd': function(listOfVal) {
+            return listOfVal.filter(function(x) {
+                return !comp.even(x);
+            });
+        }
+    };
+</script>
+
+<script>
+    var state = (function() {
+        return {
+            'secretNumber': 37,
+            'guesses': 0,
+            'current': Array.apply(null, Array(INIT_SIZE_OF_ARRAY + 1)).map(function(_, i) {
+                return i;
+            }).slice(1, INIT_SIZE_OF_ARRAY + 1)
+        };
+    })();
+
+    var update = {
+
+        'move_by_x': function() {
+            var factor = state.current.length > 10 ? 1 : 5;
+            return TOTAL_X_LEN / state.current.length / factor;
+        },
+        'number_on_line': function() {
+            var splits = state.current.length > 10 ? 5 : 5;
+            return Math.round(TOTAL_X_LEN / splits / this.move_by_x());
+        }
+    };
+
+    var helper = {
+        attrDict: function(div, dict) {
+            for (var key in dict) {
+                div.setAttribute(key, dict[key]);
+            }
+        }
+    };
+
+    var visual = {
+
+        'createTick': function(x1, y1, x2, y2, number, X) {
+
+            if (number) {
+                var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+                textAttrs = {
+                    'x': (function() {
+                        if (X < 10) {
+                            return x1 - 3;
+                        } else if (X % 10 == 0) {
+                            return x1 - 7;
+                        } else {
+                            return x1 - 5;
+                        }
+                    })(),
+                    'y': y1 - 15,
+                    'font-family': 'Verdana',
+                    'font-size': '6'
+                }
+
+                helper.attrDict(text, textAttrs);
+                text.innerHTML = X
+
+                document.getElementById('line').appendChild(text);
+            }
+
+
+            var line = document.createElementNS('http://www.w3.org/2000/svg', "line");
+            attrs = {
+                'x1': x1,
+                'y1': y1,
+                'x2': x2,
+                'y2': y2,
+                'style': "stroke:rgb(255,0,0);stroke-width:2"
+            }
+
+            helper.attrDict(line, attrs);
+            document.getElementById('line').appendChild(line);
+        },
+        'createLine': function(xLo, xHi, yLo, yMid, yHi) {
+
+            this.createTick(xLo, yMid, xHi, yMid, false);
+            this.createTick(xLo, yLo, xLo, yHi, false);
+            this.createTick(xHi, yLo, xHi, yHi, false);
+        },
+        'createNumberLine': function(stateReference) {
+            var len = stateReference.current.length;
+            var startX = X_MIN;
+            var startYHigh = Y_MAX;
+            var startYLow = Y_MIN;
+            var prevX;
+            var mid;
+            var number_on_line = update.number_on_line();
+
+            for (var i = 0; i < len; i++) {
+                prevX = startX;
+
+                if (i % number_on_line == 0 && i || i == len - 1) {
+
+                    startX = X_MIN + update.move_by_x();
+                    mid = (startYLow + startYHigh) / 2;
+
+                    this.createLine(X_MIN + update.move_by_x(), X_MIN + update.move_by_x() * number_on_line, startYLow + Y_FACTOR, mid, startYHigh)
+
+                    startYHigh += MOVE_BY_Y;
+                    startYLow += MOVE_BY_Y;
+                }
+
+                if (i == 0) {
+                    startX += update.move_by_x();
+                } else if (i == len - 1 && i % number_on_line == 0) {} else if (i == len - 1) {
+
+                    startX = prevX;
+                    startYHigh -= MOVE_BY_Y;
+                    startYLow -= MOVE_BY_Y;
+                }
+                num = stateReference.current[i];
+                this.createTick(startX, startYHigh, startX, startYLow, true, num);
+                startX += update.move_by_x()
+            }
+        }
+    }
+    var modifiedState = modify.greaterThanN(state.current, 50);
+
+    visual.createNumberLine(state);
+</script>
+<script>
+    var button = {
+        'x': X_MIN,
+        'makeButton': function(name) {
+            buttonBody = document.getElementById('buttons');
+            var button = document.createElement('button');
+            button.setAttribute('class', 'response-button');
+            button.innerHTML = name;
+            buttonBody.appendChild(button);
+            },
+        'createButtons': function(){
+            var data = [
+                ['even'],
+                ['odd'],
+                ['greater'],
+                ['less'],
+                ['prime']
+            ];
+            
+            var len = data.length;
+            
+            for (let i = 0; i < len; i++){
+                this.makeButton(data[i][0]);
+            }
+        }
+    };
+
+    button.createButtons();
+
+</script>
+
+
+</html>
